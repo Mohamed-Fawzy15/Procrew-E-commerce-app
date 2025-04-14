@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import "flowbite/src/themes/default";
+@import "flowbite";
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite";
+
+@layer components {
+  .input-style {
+    @apply bg-gray-50 border border-gray-300  text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 px-8;
+  }
+
+  .input-label {
+    @apply block mb-2 text-sm ps-2 font-medium text-gray-900;
+  }
+
+  .btn-main {
+    @apply text-white capitalize w-full mt-4 bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800;
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+}
+
+.active {
+  color: rgb(68, 68, 197);
+  font-weight: bold;
+}
