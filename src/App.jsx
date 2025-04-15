@@ -8,6 +8,10 @@ import Products from "./Pages/Products/Products";
 import ProductContextProvider from "./context/ProductContext";
 import ProtectedRoute from "./Component/ProtectedRoutes/ProtectedRoute";
 import AdminProducts from "./Pages/AdminProducts/AdminProducts";
+import OrderContextProvider from "./context/OrderContext";
+import Cart from "./Pages/Cart/Cart";
+import Orders from "./Pages/Orders/Orders";
+import AdminOrder from "./Pages/AdminOrder/AdminOrder";
 
 function App() {
   const router = createBrowserRouter([
@@ -32,6 +36,30 @@ function App() {
           ),
         },
         {
+          path: "admin/orders",
+          element: (
+            <ProtectedRoute adminOnly>
+              <AdminOrder />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "cart",
+          element: (
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "orders",
+          element: (
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: "/login",
           element: <Login />,
         },
@@ -46,7 +74,9 @@ function App() {
     <>
       <UserContextProvider>
         <ProductContextProvider>
-          <RouterProvider router={router}></RouterProvider>
+          <OrderContextProvider>
+            <RouterProvider router={router}></RouterProvider>
+          </OrderContextProvider>
         </ProductContextProvider>
       </UserContextProvider>
     </>

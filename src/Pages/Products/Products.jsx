@@ -3,11 +3,14 @@ import { useProducts } from "../../Hooks/useProducts";
 import { useUser } from "../../Hooks/useUser";
 import { IoSearch } from "react-icons/io5";
 import { Link } from "react-router-dom";
+import productImage from "../../assets/product.jpg";
+import { useOrders } from "../../Hooks/useOrders";
 
 export default function Products() {
   const { products, searchProducts } = useProducts();
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
+  const { cart, addToCart, error } = useOrders();
   const [filters, setFilters] = useState({
     category: "",
     priceMin: "",
@@ -23,11 +26,6 @@ export default function Products() {
   };
 
   const filteredProducts = searchProducts(searchQuery, processedFilters);
-
-  // Debugging
-  console.log("Raw Products:", products);
-  console.log("Filters:", processedFilters);
-  console.log("Filtered Products:", filteredProducts);
 
   const categories = [
     { id: "frozen", name: "Frozen" },
@@ -46,9 +44,18 @@ export default function Products() {
     }));
   };
 
+  const handleAddToCart = (product) => {
+    try {
+      addToCart(product);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 h-screen flex flex-col justify-center">
+    <div className="container mx-auto p-4 min-h-screen flex flex-col justify-center">
       <h1 className="text-3xl font-bold mb-4">Product Catalog</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
 
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end">
         <div className="flex-1">
@@ -138,18 +145,18 @@ export default function Products() {
         </Link>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="row justify-center gap-4">
         {filteredProducts.length ? (
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+              className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition "
             >
-              {product.image && (
+              {productImage && (
                 <img
-                  src={product.image}
+                  src={productImage}
                   alt={product.name}
-                  className="w-full h-40 object-cover rounded mb-2"
+                  className="w-50 h-50 object-cover rounded mb-2"
                 />
               )}
               <h2 className="text-xl font-semibold">{product.name}</h2>
@@ -165,6 +172,22 @@ export default function Products() {
                 {product.isAvailable ? "In Stock" : "Out of Stock"}
               </p>
               <p className="text-gray-500">Category: {product.category}</p>
+              {product.isAvailable ? (
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm hover:bg-blue-800 cursor-pointer "
+                >
+                  Add To Cart
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm  disabled:bg-blue-200 "
+                  disabled
+                >
+                  Add To Cart
+                </button>
+              )}
             </div>
           ))
         ) : (

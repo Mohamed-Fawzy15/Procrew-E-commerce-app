@@ -3,9 +3,10 @@ import { useProducts } from "../../Hooks/useProducts";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import productImage from "../../assets/product.jpg";
 
 export default function AdminProducts() {
-  const { products, addProducts, updateProducts, deleteProducts, error } =
+  const { products, addProducts, updateProduct, removeProduct, error } =
     useProducts();
 
   const [editingId, setEditingId] = useState(null);
@@ -40,7 +41,7 @@ export default function AdminProducts() {
       };
 
       if (editingId) {
-        await updateProducts(editingId, values);
+        await updateProduct(editingId, values);
         setEditingId(null);
       } else {
         await addProducts(values);
@@ -74,163 +75,180 @@ export default function AdminProducts() {
     { id: "snacks", name: "Snacks" },
   ];
 
+  console.log(products);
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">
-        {editingId ? "Edit Product" : "Add Product"}
-      </h1>
+    <div className="container mx-auto p-4 min-h-screen flex flex-col  gap-1 justify-center">
+      {/* form */}
+      <div className="sticky w-full  flex  flex-col">
+        <h1 className="text-3xl font-bold mb-4">
+          {editingId ? "Edit Product" : "Add Product"}
+        </h1>
 
-      {/* Form */}
-      <form
-        onSubmit={handleSubmit(handleEditProduct)}
-        className="flex flex-col gap-4 mb-8 max-w-lg"
-      >
-        {error && <div className="text-red-500">{error}</div>}
-        {/* product name */}
-        <div>
-          <label htmlFor="name" className="input-label">
-            Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            className="input-style w-full"
-            {...register("name")}
-          />
-          {errors.name && (
-            <div className="text-red-500 text-sm">{errors.name.message}</div>
-          )}
-        </div>
-
-        {/* product category */}
-        <div>
-          <label htmlFor="category" className="input-label">
-            Category
-          </label>
-          <select
-            id="category"
-            className="input-style w-full"
-            {...register("category")}
-          >
-            <option value="">Select Category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-          {errors.category && (
-            <div className="text-red-500 text-sm">
-              {errors.category.message}
-            </div>
-          )}
-        </div>
-
-        {/* product price */}
-        <div>
-          <label htmlFor="price" className="input-label">
-            Price
-          </label>
-          <input
-            id="price"
-            type="number"
-            step="0.01"
-            className="input-style w-full"
-            {...register("price", { valueAsNumber: true })}
-          />
-          {errors.price && (
-            <div className="text-red-500 text-sm">{errors.price.message}</div>
-          )}
-        </div>
-
-        {/* product availability */}
-        <div>
-          <label className="input-label flex items-center gap-2">
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit(handleEditProduct)}
+          className="flex flex-col gap-4 mb-8 max-w-lg"
+        >
+          {error && <div className="text-red-500">{error}</div>}
+          {/* product name */}
+          <div>
+            <label htmlFor="name" className="input-label">
+              Name
+            </label>
             <input
-              type="checkbox"
-              {...register("isAvailable")}
-              className="h-4 w-4"
+              id="name"
+              type="text"
+              className="input-style w-full"
+              {...register("name")}
             />
-            Available
-          </label>
-        </div>
-
-        {/* product description */}
-        <div>
-          <label htmlFor="description" className="input-label">
-            Description
-          </label>
-          <textarea
-            id="description"
-            className="input-style w-full"
-            {...register("description")}
-          />
-        </div>
-
-        {/* product image */}
-        <div>
-          <label htmlFor="image" className="input-label">
-            Image
-          </label>
-          <input
-            id="image"
-            type="file"
-            accept="image/*"
-            className="input-style w-full"
-            {...register("image")}
-          />
-        </div>
-
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            className="btn-main"
-            disabled={!isValid || !isDirty}
-          >
-            {editingId ? "Update Product" : "Add Product"}
-          </button>
-          {editingId && (
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="btn-main bg-gray-500"
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-
-      {/* Product List */}
-      <h2 className="text-2xl font-bold mb-4">Existing Products</h2>
-      <div className="grid grid-cols-1 gap-4">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="flex justify-between items-center border p-4 rounded"
-          >
-            <div>
-              <h3 className="text-lg font-semibold">{product.name}</h3>
-              <p>Category: {product.category}</p>
-              <p>Price: ${product.price.toFixed(2)}</p>
-              <p>{product.isAvailable ? "In Stock" : "Out of Stock"}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleEdit(product)}
-                className="btn-main bg-blue-500"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => deleteProducts(product.id)}
-                className="btn-main bg-red-500"
-              >
-                Delete
-              </button>
-            </div>
+            {errors.name && (
+              <div className="text-red-500 text-sm">{errors.name.message}</div>
+            )}
           </div>
-        ))}
+
+          {/* product category */}
+          <div>
+            <label htmlFor="category" className="input-label">
+              Category
+            </label>
+            <select
+              id="category"
+              className="input-style w-full"
+              {...register("category")}
+            >
+              <option value="">Select Category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            {errors.category && (
+              <div className="text-red-500 text-sm">
+                {errors.category.message}
+              </div>
+            )}
+          </div>
+
+          {/* product price */}
+          <div>
+            <label htmlFor="price" className="input-label">
+              Price
+            </label>
+            <input
+              id="price"
+              type="number"
+              step="0.01"
+              className="input-style w-full"
+              {...register("price", { valueAsNumber: true })}
+            />
+            {errors.price && (
+              <div className="text-red-500 text-sm">{errors.price.message}</div>
+            )}
+          </div>
+
+          {/* product availability */}
+          <div>
+            <label className="input-label flex items-center gap-2">
+              <input
+                type="checkbox"
+                {...register("isAvailable")}
+                className="h-4 w-4"
+              />
+              Available
+            </label>
+          </div>
+
+          {/* product description */}
+          <div>
+            <label htmlFor="description" className="input-label">
+              Description
+            </label>
+            <textarea
+              id="description"
+              className="input-style w-full"
+              {...register("description")}
+            />
+          </div>
+
+          {/* product image */}
+          <div>
+            <label htmlFor="image" className="input-label">
+              Image
+            </label>
+            <input
+              id="image"
+              type="file"
+              accept="image/*"
+              className="input-style w-full"
+              {...register("image")}
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              className="btn-main"
+              disabled={!isValid || !isDirty}
+            >
+              {editingId ? "Update Product" : "Add Product"}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="btn-main bg-gray-500"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* product list */}
+      <div className="w-full ">
+        {/* Product List */}
+        <h2 className="text-2xl font-bold mb-4">Existing Products</h2>
+        <div className="row gap-4">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              className="flex flex-col justify-between items-center border-2 border-gray-300 p-4 rounded shadow"
+            >
+              <div>
+                <img
+                  src={productImage}
+                  alt={product.name}
+                  className="w-50 h-50 rounded-md"
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">{product.name}</h3>
+                <p>Category: {product.category}</p>
+                <p>Price: ${product.price.toFixed(2)}</p>
+                <p>{product.isAvailable ? "In Stock" : "Out of Stock"}</p>
+              </div>
+
+              {/* card btn */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(product)}
+                  className="btn-main bg-blue-500"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => removeProduct(product.id)}
+                  className="btn-main bg-red-500"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
