@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useOrders } from "../../Hooks/useOrders";
 import { useUser } from "../../Hooks/useUser";
 import productImage from "../../assets/product.jpg";
+import { useTranslation } from "react-i18next";
 
 export default function Cart() {
   const {
@@ -9,10 +10,10 @@ export default function Cart() {
     removeFromCart,
     updateCartQuantity,
     placeOrder,
-    error,
   } = useOrders();
   const { user } = useUser();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handlePlaceOrder = async () => {
     try {
@@ -30,8 +31,7 @@ export default function Cart() {
   );
   return (
     <div className="container mx-auto p-4 pt-20 min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">Shopping Cart</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <h1 className="text-3xl font-bold mb-4">{t("cart.title")}</h1>
 
       {cart.length ? (
         <div>
@@ -70,7 +70,7 @@ export default function Cart() {
                       onClick={() => removeFromCart(item.product.id)}
                       className="text-white bg-red-500 px-4 py-2 rounded-sm"
                     >
-                      Remove
+                      {t("cart.remove")}
                     </button>
                   </div>
                 </div>
@@ -82,19 +82,19 @@ export default function Cart() {
           </div>
           <div className="mt-6 flex justify-between items-center">
             <h2 className="text-2xl font-bold">
-              Total: ${totalPrice.toFixed(2)}
+              {t("cart.total")}: ${totalPrice.toFixed(2)}
             </h2>
             <button
               onClick={handlePlaceOrder}
               className="bg-blue-700 text-white px-6 py-2 rounded-sm hover:bg-blue-800"
               disabled={!user}
             >
-              {user ? "Place Order" : "Sign in to Order"}
+              {user ? t("cart.place_order") : t("cart.sign_in_to_order")}
             </button>
           </div>
         </div>
       ) : (
-        <p>Your cart is empty.</p>
+        <p>{t("cart.empty")}</p>
       )}
     </div>
   );

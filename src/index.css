@@ -31,3 +31,13 @@
   color: rgb(68, 68, 197);
   font-weight: bold;
 }
+
+/* Arabic font and RTL adjustments */
+@font-face {
+  font-family: "Noto Sans Arabic";
+  src: url("https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700&display=swap");
+}
+
+.font-arabic {
+  font-family: "Noto Sans Arabic", sans-serif;
+}

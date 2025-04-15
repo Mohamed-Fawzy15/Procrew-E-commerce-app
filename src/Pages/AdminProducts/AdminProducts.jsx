@@ -1,255 +1,304 @@
 import { useState } from "react";
 import { useProducts } from "../../Hooks/useProducts";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import productImage from "../../assets/product.jpg";
+
+// import productImage from "../../assets/product.jpg";
+import { useTranslation } from "react-i18next";
 
 export default function AdminProducts() {
-  const { products, addProducts, updateProduct, removeProduct, error } =
-    useProducts();
-
-  const [editingId, setEditingId] = useState(null);
-
-  const schema = z.object({
-    name: z.string().min(1, "Name is required"),
-    category: z.string().min(1, "Category is required"),
-    price: z.number().min(0, "Price must be positive"),
-    isAvailable: z.boolean(),
-    description: z.string().optional(),
-  });
-
   const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid, isDirty },
-    reset,
-    setValue,
-  } = useForm({
-    mode: "all",
-    resolver: zodResolver(schema),
-    defaultValues: {
-      isAvailable: true,
-    },
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    resetData: resetProductData,
+  } = useProducts();
+  const [productForm, setProductForm] = useState({
+    id: null,
+    name: "",
+    description: "",
+    price: "",
+    category: "",
+    isAvailable: true,
+    image: "",
   });
 
-  const handleEditProduct = async (values) => {
-    try {
-      const data = {
-        ...values,
-        image: values.image?.[0],
-      };
+  const [showForm, setShowForm] = useState(false);
+  const { t } = useTranslation();
 
-      if (editingId) {
-        await updateProduct(editingId, values);
-        setEditingId(null);
+  const categories = [
+    "frozen",
+    "canned",
+    "juices",
+    "spices",
+    "pickles",
+    "snacks",
+  ];
+
+  const handleProductSubmit = (e) => {
+    e.preventDefault();
+    try {
+      const productData = {
+        name: productForm.name,
+        description: productForm.description,
+        price: Number(productForm.price),
+        category: productForm.category,
+        isAvailable: productForm.isAvailable,
+        image: productForm.image || "https://via.placeholder.com/150",
+      };
+      if (productForm.id) {
+        updateProduct(productForm.id, productData);
       } else {
-        await addProducts(values);
+        addProduct(productData);
       }
-      reset();
+      setShowForm(false);
+      setProductForm({
+        id: null,
+        name: "",
+        description: "",
+        price: "",
+        category: "",
+        isAvailable: true,
+        image: "",
+      });
     } catch (err) {
-      console.error(err);
+      alert(err.message);
     }
   };
 
-  const handleEdit = (product) => {
-    setEditingId(product.id);
-    setValue("name", product.name);
-    setValue("category", product.category);
-    setValue("price", product.price);
-    setValue("isAvailable", product.isAvailable);
-    setValue("description", product.description);
+  const handleEditProduct = (product) => {
+    setProductForm({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price.toString(),
+      category: product.category,
+      isAvailable: product.isAvailable,
+      image: product.image,
+    });
+    setShowForm(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    reset();
+  const handleDeleteProduct = (id) => {
+    if (window.confirm(t("dashboard.delete_product_confirm"))) {
+      try {
+        deleteProduct(id);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
   };
 
-  const categories = [
-    { id: "frozen", name: "Frozen" },
-    { id: "canned", name: "Canned Items" },
-    { id: "juices", name: "Juices" },
-    { id: "spices", name: "Spices" },
-    { id: "pickles", name: "Pickles" },
-    { id: "snacks", name: "Snacks" },
-  ];
-
-  console.log(products);
-
+  const handleResetData = () => {
+    if (window.confirm(t("admin_orders.reset_confirm"))) {
+      resetProductData();
+    }
+  };
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col  gap-1 justify-center">
-      {/* form */}
-      <div className="sticky w-full  flex  flex-col">
-        <h1 className="text-3xl font-bold mb-4">
-          {editingId ? "Edit Product" : "Add Product"}
-        </h1>
-
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit(handleEditProduct)}
-          className="flex flex-col gap-4 mb-8 max-w-lg"
-        >
-          {error && <div className="text-red-500">{error}</div>}
-          {/* product name */}
-          <div>
-            <label htmlFor="name" className="input-label">
-              Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              className="input-style w-full"
-              {...register("name")}
-            />
-            {errors.name && (
-              <div className="text-red-500 text-sm">{errors.name.message}</div>
-            )}
-          </div>
-
-          {/* product category */}
-          <div>
-            <label htmlFor="category" className="input-label">
-              Category
-            </label>
-            <select
-              id="category"
-              className="input-style w-full"
-              {...register("category")}
-            >
-              <option value="">Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            {errors.category && (
-              <div className="text-red-500 text-sm">
-                {errors.category.message}
-              </div>
-            )}
-          </div>
-
-          {/* product price */}
-          <div>
-            <label htmlFor="price" className="input-label">
-              Price
-            </label>
-            <input
-              id="price"
-              type="number"
-              step="0.01"
-              className="input-style w-full"
-              {...register("price", { valueAsNumber: true })}
-            />
-            {errors.price && (
-              <div className="text-red-500 text-sm">{errors.price.message}</div>
-            )}
-          </div>
-
-          {/* product availability */}
-          <div>
-            <label className="input-label flex items-center gap-2">
-              <input
-                type="checkbox"
-                {...register("isAvailable")}
-                className="h-4 w-4"
-              />
-              Available
-            </label>
-          </div>
-
-          {/* product description */}
-          <div>
-            <label htmlFor="description" className="input-label">
-              Description
-            </label>
-            <textarea
-              id="description"
-              className="input-style w-full"
-              {...register("description")}
-            />
-          </div>
-
-          {/* product image */}
-          <div>
-            <label htmlFor="image" className="input-label">
-              Image
-            </label>
-            <input
-              id="image"
-              type="file"
-              accept="image/*"
-              className="input-style w-full"
-              {...register("image")}
-            />
-          </div>
-
-          <div className="flex gap-4">
+      <section className="mb-12">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold text-blue-800">
+            {t("dashboard.products")}
+          </h2>
+          <div className="flex gap-2">
             <button
-              type="submit"
-              className="btn-main"
-              disabled={!isValid || !isDirty}
+              onClick={() => setShowForm(true)}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-sm hover:bg-blue-700"
             >
-              {editingId ? "Update Product" : "Add Product"}
+              {t("dashboard.add_product")}
             </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className="btn-main bg-gray-500"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-
-      {/* product list */}
-      <div className="w-full ">
-        {/* Product List */}
-        <h2 className="text-2xl font-bold mb-4">Existing Products</h2>
-        <div className="row gap-4">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="flex flex-col justify-between items-center border-2 border-gray-300 p-4 rounded shadow"
+            <button
+              onClick={handleResetData}
+              className="bg-red-600 text-white px-4 py-2 rounded-sm hover:bg-red-700"
             >
-              <div>
-                <img
-                  src={productImage}
-                  alt={product.name}
-                  className="w-50 h-50 rounded-md"
-                />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">{product.name}</h3>
-                <p>Category: {product.category}</p>
-                <p>Price: ${product.price.toFixed(2)}</p>
-                <p>{product.isAvailable ? "In Stock" : "Out of Stock"}</p>
-              </div>
-
-              {/* card btn */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(product)}
-                  className="btn-main bg-blue-500"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => removeProduct(product.id)}
-                  className="btn-main bg-red-500"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+              {t("dashboard.reset_data")}
+            </button>
+          </div>
         </div>
-      </div>
+        {showForm && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-md">
+              <h3 className="text-xl font-semibold mb-4 text-blue-900">
+                {productForm.id
+                  ? t("dashboard.edit_product")
+                  : t("dashboard.add_product")}
+              </h3>
+              <form onSubmit={handleProductSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="input-label">
+                    {t("products.name")}
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={productForm.name}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, name: e.target.value })
+                    }
+                    className="input-style w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="description" className="input-label">
+                    {t("products.description")}
+                  </label>
+                  <textarea
+                    id="description"
+                    value={productForm.description}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        description: e.target.value,
+                      })
+                    }
+                    className="input-style w-full"
+                    rows="4"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="price" className="input-label">
+                    {t("products.price")}
+                  </label>
+                  <input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={productForm.price}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, price: e.target.value })
+                    }
+                    className="input-style w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="category" className="input-label">
+                    {t("products.category")}
+                  </label>
+                  <select
+                    id="category"
+                    value={productForm.category}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        category: e.target.value,
+                      })
+                    }
+                    className="input-style w-full"
+                    required
+                  >
+                    <option value="">{t("products.select_category")}</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {t(`products.categories.${cat}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="input-label flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={productForm.isAvailable}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          isAvailable: e.target.checked,
+                        })
+                      }
+                    />
+                    {t("products.available")}
+                  </label>
+                </div>
+                <div>
+                  <label htmlFor="image" className="input-label">
+                    {t("products.image_url")}
+                  </label>
+                  <input
+                    id="image"
+                    type="text"
+                    value={productForm.image}
+                    onChange={(e) =>
+                      setProductForm({ ...productForm, image: e.target.value })
+                    }
+                    className="input-style w-full"
+                    placeholder="https://via.placeholder.com/150"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-sm hover:bg-indigo-700 flex-1"
+                  >
+                    {t("dashboard.save")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-sm hover:bg-gray-600 flex-1"
+                  >
+                    {t("dashboard.cancel")}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.length ? (
+            products.map((product) => (
+              <div
+                key={product.id}
+                className="border rounded-lg p-4 shadow-sm bg-white"
+              >
+                {product.image && (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-32 object-cover rounded mb-2"
+                  />
+                )}
+                <h3 className="text-lg font-semibold text-indigo-900">
+                  {product.name}
+                </h3>
+                <p className="text-gray-600">
+                  {t("products.price")}: ${Number(product.price).toFixed(2)}
+                </p>
+                <p className="text-gray-600">
+                  {t("products.category")}:{" "}
+                  {t(`products.categories.${product.category}`)}
+                </p>
+                <p
+                  className={
+                    product.isAvailable ? "text-green-500" : "text-red-500"
+                  }
+                >
+                  {product.isAvailable
+                    ? t("products.available")
+                    : t("products.unavailable")}
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handleEditProduct(product)}
+                    className="bg-indigo-600 text-white px-3 py-1 rounded-sm hover:bg-indigo-700"
+                  >
+                    {t("dashboard.edit")}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProduct(product.id)}
+                    className="bg-red-600 text-white px-3 py-1 rounded-sm hover:bg-red-700"
+                  >
+                    {t("dashboard.delete")}
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600">{t("dashboard.no_products")}</p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

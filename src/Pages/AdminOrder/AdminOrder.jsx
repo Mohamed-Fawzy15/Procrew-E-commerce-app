@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { useOrders } from "../../Hooks/useOrders";
+import { useTranslation } from "react-i18next";
 
 export default function AdminOrder() {
-  const { orders, filterOrders, updateOrderStatus, error } = useOrders();
+  const {
+    filterOrders,
+    updateOrderStatus,
+    resetData: resetOrderData,
+  } = useOrders();
+  const { t } = useTranslation();
 
   const [filters, setFilters] = useState({
     status: "",
@@ -26,23 +32,36 @@ export default function AdminOrder() {
   const filteredOrders = filterOrders(filters);
 
   const statuses = [
-    "pending",
-    "processing",
-    "shipped",
-    "delivered",
-    "cancelled",
+    t("admin_orders.pending"),
+    t("admin_orders.processing"),
+    t("admin_orders.shipped"),
+    t("admin_orders.delivered"),
+    t("admin_orders.cancelled"),
   ];
 
+  const handleResetData = () => {
+    if (window.confirm(t("admin_orders.reset_confirm"))) {
+      resetOrderData();
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 pt-20">
-      <h1 className="text-3xl font-bold mb-4">Manage Orders</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+    <div className="container mx-auto p-4 pt-20 min-h-screen">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold mb-4">{t("admin_orders.title")}</h1>
+        <button
+          onClick={handleResetData}
+          className="bg-red-600 text-white px-4 py-2 rounded-sm hover:bg-red-700"
+        >
+          {t("admin_orders.reset_data")}
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="mb-6 flex flex-col gap-4 md:flex-row">
         <div>
           <label htmlFor="status" className="input-label">
-            Status
+            {t("admin_orders.status")}
           </label>
           <select
             id="status"
@@ -51,7 +70,7 @@ export default function AdminOrder() {
             value={filters.status}
             onChange={handleFilterChange}
           >
-            <option value="">All Statuses</option>
+            <option value="">{t("admin_orders.all_statuses")}</option>
             {statuses.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -61,7 +80,7 @@ export default function AdminOrder() {
         </div>
         <div>
           <label htmlFor="userId" className="input-label">
-            User Email
+            {t("admin_orders.user_email")}
           </label>
           <input
             id="userId"
@@ -70,12 +89,12 @@ export default function AdminOrder() {
             className="input-style"
             value={filters.userId}
             onChange={handleFilterChange}
-            placeholder="Search by email"
+            placeholder={t("admin_orders.user_email")}
           />
         </div>
         <div>
           <label htmlFor="date" className="input-label">
-            Date
+            {t("admin_orders.date")}
           </label>
           <input
             id="date"
@@ -88,16 +107,17 @@ export default function AdminOrder() {
         </div>
       </div>
 
-      {/* Orders */}
       <div className="space-y-6">
         {filteredOrders.length ? (
           filteredOrders.map((order) => (
             <div key={order.id} className="border rounded-lg p-4">
               <h2 className="text-xl font-semibold">
-                Order #{order.id} - {order.userId}
+                {t("admin_orders.order_id", { id: order.id })} - {order.userId}
               </h2>
               <p className="text-gray-600">
-                Placed on: {new Date(order.createdAt).toLocaleDateString()}
+                {t("admin_orders.placed_on", {
+                  date: new Date(order.createdAt).toLocaleDateString(),
+                })}
               </p>
               <div className="mt-4">
                 {order.items.map((item) => (
@@ -123,11 +143,13 @@ export default function AdminOrder() {
                 ))}
               </div>
               <p className="text-gray-800 font-bold mt-4">
-                Total: ${Number(order.total).toFixed(2)}
+                {t("admin_orders.total_price", {
+                  price: Number(order.total).toFixed(2),
+                })}
               </p>
               <div className="mt-4">
                 <label htmlFor={`status-${order.id}`} className="input-label">
-                  Status
+                  {t("admin_orders.status")}
                 </label>
                 <select
                   id={`status-${order.id}`}
@@ -145,7 +167,7 @@ export default function AdminOrder() {
             </div>
           ))
         ) : (
-          <p>No orders found.</p>
+          <p>{t("admin_orders.no_orders")}</p>
         )}
       </div>
     </div>

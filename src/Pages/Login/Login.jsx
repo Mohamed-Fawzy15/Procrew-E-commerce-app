@@ -6,16 +6,19 @@ import { MdEmail } from "react-icons/md";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../Hooks/useUser";
+import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 
 export default function Login() {
-  const { login } = useUser();
+  const { login, user } = useUser();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const schema = z.object({
-    email: z.string().email(),
+    email: z.string().email(t("login.invalid_email")),
     password: z
       .string()
-      .regex(/^[a-zA-Z0-9]{8,}$/, "Password must be at least 8 characters"),
+      .regex(/^[a-zA-Z0-9]{8,}$/, t("login.invalid_password")),
   });
 
   const {
@@ -35,8 +38,13 @@ export default function Login() {
         password: values.password,
       });
       reset();
-      navigate("/");
+      if (user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
+      Swal.fire(t("login.invalid_email_or_password"));
       console.log("login failed", err.message);
     }
   };
@@ -47,12 +55,12 @@ export default function Login() {
         className="flex flex-col gap-4 justify-center items-center sm:w-full md:w-2/5 bg-gray-100 p-4 rounded-lg"
       >
         {/* form header */}
-        <h1 className="text-2xl font-bold">Login</h1>
+        <h1 className="text-2xl font-bold">{t("login.title")}</h1>
 
         {/* email input */}
         <div className="w-full">
           <label htmlFor="email" className="input-label">
-            Your Email
+            {t("login.email")}
           </label>
           <div className="relative">
             <MdEmail className="absolute top-3 left-2 text-blue-500 text-lg" />
@@ -60,7 +68,7 @@ export default function Login() {
               type="email"
               id="email"
               className="input-style px-7"
-              placeholder="Email"
+              placeholder={t("login.email")}
               {...register("email")}
             />
             {errors.email && (
@@ -72,7 +80,7 @@ export default function Login() {
         {/* password input */}
         <div className="w-full">
           <label htmlFor="password" className="input-label">
-            password
+            {t("login.password")}
           </label>
           <div className="relative">
             <RiLockPasswordFill className="absolute top-3 left-2 text-blue-500 text-lg" />
@@ -80,7 +88,7 @@ export default function Login() {
               type="password"
               id="password"
               className="input-style px-7"
-              placeholder="password"
+              placeholder={t("login.password")}
               {...register("password")}
             />
             {errors.password && (
@@ -97,13 +105,13 @@ export default function Login() {
           className="btn-main"
           disabled={!isValid || !isDirty}
         >
-          Login
+          {t("login.login")}
         </button>
 
         <small>
-          Don&apos;t have an account?
+          {t("login.dont_have_account")}
           <Link to={"/register"} className="text-blue-500 underline">
-            Signup
+            {t("register.register")}
           </Link>
         </small>
       </form>

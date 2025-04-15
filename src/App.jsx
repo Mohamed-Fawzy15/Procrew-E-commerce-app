@@ -12,6 +12,11 @@ import OrderContextProvider from "./context/OrderContext";
 import Cart from "./Pages/Cart/Cart";
 import Orders from "./Pages/Orders/Orders";
 import AdminOrder from "./Pages/AdminOrder/AdminOrder";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./i18n";
+import { Toaster } from "react-hot-toast";
+import AdminDashboard from "./Component/AdminDashboard/AdminDashboard";
+import AdminLayout from "./Pages/AdminLayout/AdminLayout";
 
 function App() {
   const router = createBrowserRouter([
@@ -28,20 +33,38 @@ function App() {
           ),
         },
         {
-          path: "admin/products",
+          path: "admin",
           element: (
-            <ProtectedRoute adminOnly>
-              <AdminProducts />
+            <ProtectedRoute>
+              <AdminLayout />
             </ProtectedRoute>
           ),
-        },
-        {
-          path: "admin/orders",
-          element: (
-            <ProtectedRoute adminOnly>
-              <AdminOrder />
-            </ProtectedRoute>
-          ),
+          children: [
+            {
+              path: "dashboard",
+              element: (
+                <ProtectedRoute adminOnly>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "products",
+              element: (
+                <ProtectedRoute adminOnly>
+                  <AdminProducts />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "orders",
+              element: (
+                <ProtectedRoute adminOnly>
+                  <AdminOrder />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
         {
           path: "cart",
@@ -72,13 +95,16 @@ function App() {
   ]);
   return (
     <>
-      <UserContextProvider>
-        <ProductContextProvider>
-          <OrderContextProvider>
-            <RouterProvider router={router}></RouterProvider>
-          </OrderContextProvider>
-        </ProductContextProvider>
-      </UserContextProvider>
+      <I18nextProvider i18n={i18n}>
+        <UserContextProvider>
+          <ProductContextProvider>
+            <OrderContextProvider>
+              <Toaster position="top-right" />
+              <RouterProvider router={router}></RouterProvider>
+            </OrderContextProvider>
+          </ProductContextProvider>
+        </UserContextProvider>
+      </I18nextProvider>
     </>
   );
 }

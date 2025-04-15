@@ -5,18 +5,21 @@ import { IoSearch } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import productImage from "../../assets/product.jpg";
 import { useOrders } from "../../Hooks/useOrders";
+import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 
 export default function Products() {
-  const { products, searchProducts } = useProducts();
+  const { searchProducts } = useProducts();
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
-  const { cart, addToCart, error } = useOrders();
+  const { addToCart } = useOrders();
   const [filters, setFilters] = useState({
     category: "",
     priceMin: "",
     priceMax: "",
     isAvailable: undefined,
   });
+  const { t } = useTranslation();
 
   // Process filters to ensure numeric values
   const processedFilters = {
@@ -47,20 +50,28 @@ export default function Products() {
   const handleAddToCart = (product) => {
     try {
       addToCart(product);
-    } catch (err) {
-      alert(err.message);
+      toast.success(t("products.product_added_to_cart"), {
+        style: {
+          fontWeight: 600,
+        },
+      });
+    } catch {
+      toast.error(t("products.product_not_found"), {
+        style: {
+          fontWeight: 600,
+        },
+      });
     }
   };
 
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col justify-center">
-      <h1 className="text-3xl font-bold mb-4">Product Catalog</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <h1 className="text-3xl font-bold mb-4">{t("products.title")}</h1>
 
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end">
         <div className="flex-1">
           <label htmlFor="search" className="input-label">
-            Search
+            {t("products.search")}
           </label>
           <div className="relative">
             <IoSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500" />
@@ -68,7 +79,7 @@ export default function Products() {
               id="search"
               type="text"
               className="input-style w-full pl-10"
-              placeholder="Search products..."
+              placeholder={t("products.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -77,7 +88,7 @@ export default function Products() {
         <div className="flex gap-4 flex-wrap">
           <div>
             <label htmlFor="category" className="input-label">
-              Category
+              {t("products.category")}
             </label>
             <select
               id="category"
@@ -86,7 +97,7 @@ export default function Products() {
               value={filters.category}
               onChange={handleFilterChange}
             >
-              <option value="">All Categories</option>
+              <option value="">{t("products.all_categories")}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -96,7 +107,7 @@ export default function Products() {
           </div>
           <div>
             <label htmlFor="priceMin" className="input-label">
-              Min Price
+              {t("products.min_price")}
             </label>
             <input
               id="priceMin"
@@ -110,7 +121,7 @@ export default function Products() {
           </div>
           <div>
             <label htmlFor="priceMax" className="input-label">
-              Max Price
+              {t("products.max_price")}
             </label>
             <input
               id="priceMax"
@@ -130,7 +141,7 @@ export default function Products() {
                 checked={filters.isAvailable === true}
                 onChange={handleFilterChange}
               />
-              Available Only
+              {t("products.available_only")}
             </label>
           </div>
         </div>
@@ -141,7 +152,7 @@ export default function Products() {
           to="/admin/products"
           className="text-blue-500 underline mb-4 inline-block"
         >
-          Manage Products
+          {t("products.manage_products")}
         </Link>
       )}
 
@@ -169,15 +180,19 @@ export default function Products() {
                   product.isAvailable ? "text-green-500" : "text-red-500"
                 }
               >
-                {product.isAvailable ? "In Stock" : "Out of Stock"}
+                {product.isAvailable
+                  ? t("products.in_stock")
+                  : t("products.out_of_stock")}
               </p>
-              <p className="text-gray-500">Category: {product.category}</p>
+              <p className="text-gray-500">
+                {t("products.category")}: {product.category}
+              </p>
               {product.isAvailable ? (
                 <button
                   onClick={() => handleAddToCart(product)}
                   className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm hover:bg-blue-800 cursor-pointer "
                 >
-                  Add To Cart
+                  {t("products.add_to_cart")}
                 </button>
               ) : (
                 <button
@@ -185,13 +200,13 @@ export default function Products() {
                   className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm  disabled:bg-blue-200 "
                   disabled
                 >
-                  Add To Cart
+                  {t("products.add_to_cart")}
                 </button>
               )}
             </div>
           ))
         ) : (
-          <p>No products found.</p>
+          <p>{t("products.no_products")}</p>
         )}
       </div>
     </div>
