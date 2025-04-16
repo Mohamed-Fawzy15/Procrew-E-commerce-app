@@ -1,4 +1,6 @@
 import { createContext, useEffect, useState } from "react";
+import initialUsers from "../Data/users.json";
+import { downloadJSON } from "../utils/downloadJSON";
 
 export const UserContext = createContext();
 
@@ -9,7 +11,7 @@ export default function UserContextProvider({ children }) {
   });
 
   const [token, setToken] = useState(localStorage.getItem("token") || null);
-
+  const [users, setUsers] = useState(initialUsers || []); // this got the users from the json file
   const [error, setError] = useState(null);
 
   //   this step to check if the the user and the token is sync with the localStorage
@@ -27,6 +29,13 @@ export default function UserContextProvider({ children }) {
     }
   }, [user, token]);
 
+  // Download users.json when users change
+  useEffect(() => {
+    if (users.length) {
+      downloadJSON(users, "users.json");
+    }
+  }, [users]);
+
   //   handle the login like api
   const login = (values) => {
     setError(null);
@@ -35,8 +44,7 @@ export default function UserContextProvider({ children }) {
         throw new Error("Email and password are required");
       }
 
-      const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      const existingUser = storedUsers.find((u) => u.email === values.email);
+      const existingUser = users.find((u) => u.email === values.email);
 
       if (!existingUser) {
         throw new Error("User not found. Please sign up.");
@@ -46,13 +54,17 @@ export default function UserContextProvider({ children }) {
         throw new Error("Incorrect password");
       }
 
-      setUser({
+      const userData = {
         email: existingUser.email,
         name: existingUser.name,
         phone: existingUser.phone,
-        role: existingUser.role,
-      });
+        role: existingUser.role || "user",
+      };
+
+      setUser(userData);
       setToken(`token_${Date.now()}`);
+
+      return userData;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -73,8 +85,7 @@ export default function UserContextProvider({ children }) {
         throw new Error("all fields are required");
       }
 
-      const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      if (storedUsers.some((u) => u.email === values.email)) {
+      if (users.some((u) => u.email === values.email)) {
         throw new Error("Email already registered");
       }
 
@@ -82,22 +93,24 @@ export default function UserContextProvider({ children }) {
         email: values.email,
         name: values.name || values.email.split("@")[0],
         password: values.password,
-        confrimPassword: values.confrimPassword,
+        confirmPassword: values.confirmPassword,
         phone: values.phone,
         role: values.email === "admin@example.com" ? "admin" : "user",
       };
 
-      storedUsers.push(newUser);
-      localStorage.setItem("users", JSON.stringify(storedUsers));
+      setUsers((prev) => [...prev, newUser]);
 
-      setUser({
+      const userData = {
         email: values.email,
         name: values.name,
         phone: values.phone,
         role: newUser.role,
-      });
+      };
 
+      setUser(userData);
       setToken(`token_${Date.now()}`);
+
+      return userData;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -111,8 +124,15 @@ export default function UserContextProvider({ children }) {
     setToken(null);
   };
 
+  // Manual save for testing
+  const saveData = () => {
+    downloadJSON(users, "users.json");
+  };
+
   return (
-    <UserContext.Provider value={{ user, token, error, login, signup, logout }}>
+    <UserContext.Provider
+      value={{ user, token, users, error, login, signup, logout, saveData }}
+    >
       {children}
     </UserContext.Provider>
   );

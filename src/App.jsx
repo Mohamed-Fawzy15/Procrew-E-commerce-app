@@ -17,6 +17,7 @@ import i18n from "./i18n";
 import { Toaster } from "react-hot-toast";
 import AdminDashboard from "./Component/AdminDashboard/AdminDashboard";
 import AdminLayout from "./Pages/AdminLayout/AdminLayout";
+import NotFound from "./Pages/notFound/notfound";
 
 function App() {
   const router = createBrowserRouter([
@@ -89,6 +90,10 @@ function App() {
         {
           path: "register",
           element: <Register />,
+        },
+        {
+          path: "*",
+          element: <NotFound />,
         },
       ],
     },

@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useProducts } from "../../Hooks/useProducts";
-
-// import productImage from "../../assets/product.jpg";
 import { useTranslation } from "react-i18next";
 
 export default function AdminProducts() {
   const {
     products,
-    addProduct,
+    addProducts,
     updateProduct,
     deleteProduct,
-    resetData: resetProductData,
+    resetProducts,
+    saveData,
   } = useProducts();
+
   const [productForm, setProductForm] = useState({
     id: null,
     name: "",
@@ -26,12 +26,12 @@ export default function AdminProducts() {
   const { t } = useTranslation();
 
   const categories = [
-    "frozen",
-    "canned",
-    "juices",
-    "spices",
-    "pickles",
-    "snacks",
+    t("categories.frozen"),
+    t("categories.canned"),
+    t("categories.juices"),
+    t("categories.spices"),
+    t("categories.pickles"),
+    t("categories.snacks"),
   ];
 
   const handleProductSubmit = (e) => {
@@ -48,7 +48,7 @@ export default function AdminProducts() {
       if (productForm.id) {
         updateProduct(productForm.id, productData);
       } else {
-        addProduct(productData);
+        addProducts(productData);
       }
       setShowForm(false);
       setProductForm({
@@ -90,8 +90,12 @@ export default function AdminProducts() {
 
   const handleResetData = () => {
     if (window.confirm(t("admin_orders.reset_confirm"))) {
-      resetProductData();
+      resetProducts();
     }
+  };
+
+  const handleSaveData = () => {
+    saveData();
   };
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col  gap-1 justify-center">
@@ -105,13 +109,19 @@ export default function AdminProducts() {
               onClick={() => setShowForm(true)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-sm hover:bg-blue-700"
             >
-              {t("dashboard.add_product")}
+              {t("dashboard.product.add")}
             </button>
             <button
               onClick={handleResetData}
               className="bg-red-600 text-white px-4 py-2 rounded-sm hover:bg-red-700"
             >
-              {t("dashboard.reset_data")}
+              {t("dashboard.product.reset")}
+            </button>
+            <button
+              onClick={handleSaveData}
+              className="bg-green-600 text-white px-4 py-2 rounded-sm hover:bg-green-700"
+            >
+              {t("dashboard.product.save_data")}
             </button>
           </div>
         </div>
@@ -120,13 +130,13 @@ export default function AdminProducts() {
             <div className="bg-white p-6 rounded-lg w-full max-w-md">
               <h3 className="text-xl font-semibold mb-4 text-blue-900">
                 {productForm.id
-                  ? t("dashboard.edit_product")
-                  : t("dashboard.add_product")}
+                  ? t("dashboard.product.edit_product")
+                  : t("dashboard.product.add")}
               </h3>
               <form onSubmit={handleProductSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="name" className="input-label">
-                    {t("products.name")}
+                    {t("dashboard.product.name")}
                   </label>
                   <input
                     id="name"
@@ -141,7 +151,7 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label htmlFor="description" className="input-label">
-                    {t("products.description")}
+                    {t("dashboard.product.description")}
                   </label>
                   <textarea
                     id="description"
@@ -158,7 +168,7 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label htmlFor="price" className="input-label">
-                    {t("products.price")}
+                    {t("dashboard.product.price")}
                   </label>
                   <input
                     id="price"
@@ -188,10 +198,12 @@ export default function AdminProducts() {
                     className="input-style w-full"
                     required
                   >
-                    <option value="">{t("products.select_category")}</option>
+                    <option value="">
+                      {t("dashboard.product.select_category")}
+                    </option>
                     {categories.map((cat) => (
                       <option key={cat} value={cat}>
-                        {t(`products.categories.${cat}`)}
+                        {cat}
                       </option>
                     ))}
                   </select>
@@ -208,12 +220,12 @@ export default function AdminProducts() {
                         })
                       }
                     />
-                    {t("products.available")}
+                    {t("dashboard.product.available")}
                   </label>
                 </div>
                 <div>
                   <label htmlFor="image" className="input-label">
-                    {t("products.image_url")}
+                    {t("dashboard.product.image")}
                   </label>
                   <input
                     id="image"
@@ -231,71 +243,112 @@ export default function AdminProducts() {
                     type="submit"
                     className="bg-indigo-600 text-white px-4 py-2 rounded-sm hover:bg-indigo-700 flex-1"
                   >
-                    {t("dashboard.save")}
+                    {t("dashboard.product.save")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="bg-gray-500 text-white px-4 py-2 rounded-sm hover:bg-gray-600 flex-1"
                   >
-                    {t("dashboard.cancel")}
+                    {t("dashboard.product.cancel")}
                   </button>
                 </div>
               </form>
             </div>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="overflow-x-auto">
           {products.length ? (
-            products.map((product) => (
-              <div
-                key={product.id}
-                className="border rounded-lg p-4 shadow-sm bg-white"
-              >
-                {product.image && (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                )}
-                <h3 className="text-lg font-semibold text-indigo-900">
-                  {product.name}
-                </h3>
-                <p className="text-gray-600">
-                  {t("products.price")}: ${Number(product.price).toFixed(2)}
-                </p>
-                <p className="text-gray-600">
-                  {t("products.category")}:{" "}
-                  {t(`products.categories.${product.category}`)}
-                </p>
-                <p
-                  className={
-                    product.isAvailable ? "text-green-500" : "text-red-500"
-                  }
-                >
-                  {product.isAvailable
-                    ? t("products.available")
-                    : t("products.unavailable")}
-                </p>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => handleEditProduct(product)}
-                    className="bg-indigo-600 text-white px-3 py-1 rounded-sm hover:bg-indigo-700"
-                  >
-                    {t("dashboard.edit")}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(product.id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded-sm hover:bg-red-700"
-                  >
-                    {t("dashboard.delete")}
-                  </button>
-                </div>
-              </div>
-            ))
+            <table className="min-w-full bg-white border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("dashboard.product.image")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("dashboard.product.name")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("dashboard.product.price")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("products.category")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("dashboard.product.status")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("dashboard.product.actions")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {products.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {product.image && (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {product.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {product.description}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        ${Number(product.price).toFixed(2)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {product.category}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          product.isAvailable
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {product.isAvailable
+                          ? t("dashboard.product.available")
+                          : t("dashboard.product.unavailable")}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          {t("dashboard.product.edit")}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          {t("dashboard.product.delete")}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
-            <p className="text-gray-600">{t("dashboard.no_products")}</p>
+            <p className="text-gray-600">
+              {t("dashboard.product.no_products")}
+            </p>
           )}
         </div>
       </section>

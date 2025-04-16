@@ -3,11 +3,7 @@ import { useOrders } from "../../Hooks/useOrders";
 import { useTranslation } from "react-i18next";
 
 export default function AdminOrder() {
-  const {
-    filterOrders,
-    updateOrderStatus,
-    resetData: resetOrderData,
-  } = useOrders();
+  const { filterOrders, updateOrderStatus, resetOrders } = useOrders();
   const { t } = useTranslation();
 
   const [filters, setFilters] = useState({
@@ -41,7 +37,7 @@ export default function AdminOrder() {
 
   const handleResetData = () => {
     if (window.confirm(t("admin_orders.reset_confirm"))) {
-      resetOrderData();
+      resetOrders();
     }
   };
 
@@ -53,7 +49,7 @@ export default function AdminOrder() {
           onClick={handleResetData}
           className="bg-red-600 text-white px-4 py-2 rounded-sm hover:bg-red-700"
         >
-          {t("admin_orders.reset_data")}
+          {t("dashboard.product.reset")}
         </button>
       </div>
 
@@ -109,63 +105,100 @@ export default function AdminOrder() {
 
       <div className="space-y-6">
         {filteredOrders.length ? (
-          filteredOrders.map((order) => (
-            <div key={order.id} className="border rounded-lg p-4">
-              <h2 className="text-xl font-semibold">
-                {t("admin_orders.order_id", { id: order.id })} - {order.userId}
-              </h2>
-              <p className="text-gray-600">
-                {t("admin_orders.placed_on", {
-                  date: new Date(order.createdAt).toLocaleDateString(),
-                })}
-              </p>
-              <div className="mt-4">
-                {order.items.map((item) => (
-                  <div
-                    key={item.product.id}
-                    className="flex items-center gap-4 mb-2"
-                  >
-                    {item.product.image && (
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )}
-                    <div>
-                      <p>{item.product.name}</p>
-                      <p className="text-gray-600">
-                        ${Number(item.product.price).toFixed(2)} x{" "}
-                        {item.quantity}
-                      </p>
-                    </div>
-                  </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("admin_orders.order_id")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("admin_orders.user_email")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("admin_orders.date")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("admin_orders.items")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("admin_orders.total_price")}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("admin_orders.status")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {order.id}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {order.userId}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-2">
+                        {order.items.map((item) => (
+                          <div
+                            key={item.product.id}
+                            className="flex items-center gap-2"
+                          >
+                            {item.product.image && (
+                              <img
+                                src={item.product.image}
+                                alt={item.product.name}
+                                className="w-8 h-8 object-cover rounded"
+                              />
+                            )}
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {item.product.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                ${Number(item.product.price).toFixed(2)} x{" "}
+                                {item.quantity}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        ${Number(order.total).toFixed(2)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(order.id, e.target.value)
+                        }
+                        className="input-style text-sm"
+                      >
+                        {statuses.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-              <p className="text-gray-800 font-bold mt-4">
-                {t("admin_orders.total_price", {
-                  price: Number(order.total).toFixed(2),
-                })}
-              </p>
-              <div className="mt-4">
-                <label htmlFor={`status-${order.id}`} className="input-label">
-                  {t("admin_orders.status")}
-                </label>
-                <select
-                  id={`status-${order.id}`}
-                  value={order.status}
-                  onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                  className="input-style"
-                >
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          ))
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p>{t("admin_orders.no_orders")}</p>
         )}

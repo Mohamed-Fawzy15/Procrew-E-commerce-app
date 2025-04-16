@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Apple Juice",
+    "category": "juices",
+    "price": 4.99,
+    "isAvailable": true,
+    "description": "Fresh apple juice",
+    "image": "https://via.placeholder.com/150"
+  },
+  {
+    "id": 1744805442585,
+    "name": "mango",
+    "category": "عصائر",
+    "price": 20,
+    "isAvailable": true,
+    "description": "mango",
+    "image": "https://placehold.co/600x600"
+  }
+]

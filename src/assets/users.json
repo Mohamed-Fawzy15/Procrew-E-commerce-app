@@ -1,0 +1,26 @@
+[
+  {
+    "email": "admin@example.com",
+    "name": "Admin",
+    "password": "password123",
+    "confirmPassword": "password123",
+    "phone": "1234567890",
+    "role": "admin"
+  },
+  {
+    "email": "user@example.com",
+    "name": "User",
+    "password": "test123",
+    "confirmPassword": "test123",
+    "phone": "0987654321",
+    "role": "user"
+  },
+  {
+    "email": "test@gmail.com",
+    "name": "mohamed",
+    "password": "123456789",
+    "confirmPassword": "123456789",
+    "phone": "01205066629",
+    "role": "user"
+  }
+]

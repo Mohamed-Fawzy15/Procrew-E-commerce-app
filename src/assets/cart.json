@@ -1,0 +1,16 @@
+{
+  "test@gmail.com": [
+    {
+      "product": {
+        "id": 1744805442585,
+        "name": "mango",
+        "category": "عصائر",
+        "price": 20,
+        "isAvailable": true,
+        "description": "mango",
+        "image": "https://placehold.co/600x600"
+      },
+      "quantity": 1
+    }
+  ]
+}

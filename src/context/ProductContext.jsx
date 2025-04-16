@@ -1,17 +1,20 @@
+// i was using localStorage here but the product data should not be in the localStorage
+
 import { createContext, useEffect, useState } from "react";
+import initialProducts from "../data/products.json";
+import { downloadJSON } from "../utils/downloadJSON";
 
 export const ProductContext = createContext();
 
 export default function ProductContextProvider({ children }) {
-  const [products, setProducts] = useState(() => {
-    const storedProducts = localStorage.getItem("products");
-    return storedProducts ? JSON.parse(storedProducts) : [];
-  });
-
+  const [products, setProducts] = useState(initialProducts || []);
   const [error, setError] = useState(null);
 
+  // Download products.json when products change
   useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
+    if (products.length) {
+      downloadJSON(products, "products.json");
+    }
   }, [products]);
 
   //   handle add products
@@ -29,10 +32,10 @@ export default function ProductContextProvider({ children }) {
         price: Number(values.price),
         isAvailable: values.isAvailable !== false,
         description: values.description || "",
-        image: values.image ? URL.createObjectURL(values.image) : "",
+        image: values.image || "https://via.placeholder.com/150",
       };
 
-      setProducts([...products, newProduct]); // to get the old the products and the new ones
+      setProducts((prev) => [...prev, newProduct]); // to get the old the products and the new ones
       return newProduct;
     } catch (err) {
       setError(err.message);
@@ -47,8 +50,8 @@ export default function ProductContextProvider({ children }) {
       if (!values.name || !values.category || !values.price) {
         throw new Error("Name, category, and price are required");
       }
-      setProducts(
-        products.map((product) =>
+      setProducts((prev) =>
+        prev.map((product) =>
           product.id === id
             ? {
                 ...product,
@@ -57,9 +60,10 @@ export default function ProductContextProvider({ children }) {
                 price: Number(values.price),
                 isAvailable: values.isAvailable !== false,
                 description: values.description || "",
-                image: values.image
-                  ? URL.createObjectURL(values.image)
-                  : product.image,
+                image:
+                  values.image ||
+                  product.image ||
+                  "https://via.placeholder.com/150",
               }
             : product
         )
@@ -74,7 +78,19 @@ export default function ProductContextProvider({ children }) {
   const removeProduct = (id) => {
     setError(null);
     try {
-      setProducts(products.filter((product) => product.id !== id));
+      setProducts((prev) => prev.filter((product) => product.id !== id));
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  // Reset all products
+  const resetProducts = () => {
+    setError(null);
+    try {
+      setProducts([]);
+      downloadJSON([], "products.json");
     } catch (err) {
       setError(err.message);
       throw err;
@@ -122,6 +138,11 @@ export default function ProductContextProvider({ children }) {
     return filteredProducts;
   };
 
+  // Manual save
+  const saveData = () => {
+    downloadJSON(products, "products.json");
+  };
+
   return (
     <ProductContext.Provider
       value={{
@@ -131,6 +152,8 @@ export default function ProductContextProvider({ children }) {
         updateProduct,
         removeProduct,
         searchProducts,
+        resetProducts,
+        saveData,
       }}
     >
       {children}

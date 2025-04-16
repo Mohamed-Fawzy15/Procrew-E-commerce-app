@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { useProducts } from "../../Hooks/useProducts";
-import { useUser } from "../../Hooks/useUser";
 import { IoSearch } from "react-icons/io5";
 import { Link } from "react-router-dom";
-import productImage from "../../assets/product.jpg";
 import { useOrders } from "../../Hooks/useOrders";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 
 export default function Products() {
   const { searchProducts } = useProducts();
-  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const { addToCart } = useOrders();
   const [filters, setFilters] = useState({
@@ -147,27 +144,18 @@ export default function Products() {
         </div>
       </div>
 
-      {user?.role === "admin" && (
-        <Link
-          to="/admin/products"
-          className="text-blue-500 underline mb-4 inline-block"
-        >
-          {t("products.manage_products")}
-        </Link>
-      )}
-
-      <div className="row justify-center gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center gap-4">
         {filteredProducts.length ? (
           filteredProducts.map((product) => (
             <div
               key={product.id}
               className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition "
             >
-              {productImage && (
+              {product.image && (
                 <img
-                  src={productImage}
+                  src={product.image}
                   alt={product.name}
-                  className="w-50 h-50 object-cover rounded mb-2"
+                  className="w-full h-50 object-cover rounded mb-2"
                 />
               )}
               <h2 className="text-xl font-semibold">{product.name}</h2>

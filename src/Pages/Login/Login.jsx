@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-// import style from "./Login.module.css";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { MdEmail } from "react-icons/md";
@@ -10,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 
 export default function Login() {
-  const { login, user } = useUser();
+  const { login } = useUser();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -33,18 +32,35 @@ export default function Login() {
 
   const handleLogin = async (values) => {
     try {
-      await login({
+      const loggedInUser = await login({
         email: values.email,
         password: values.password,
       });
       reset();
-      if (user.role === "admin") {
+      if (loggedInUser.role === "admin") {
         navigate("/admin/dashboard");
+        Swal.fire({
+          icon: "success",
+          title: t("login.welcome_back_admin"),
+          timer: 1500,
+          showConfirmButton: false,
+        });
       } else {
         navigate("/");
+        Swal.fire({
+          icon: "success",
+          title: t("login.welcome_back"),
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     } catch (err) {
-      Swal.fire(t("login.invalid_email_or_password"));
+      Swal.fire({
+        icon: "error",
+        title: t("login.invalid_email_or_password"),
+        timer: 1500,
+        showConfirmButton: false,
+      });
       console.log("login failed", err.message);
     }
   };

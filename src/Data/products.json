@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "name": "Apple Juice",
+    "category": "juices",
+    "price": 4.99,
+    "isAvailable": true,
+    "description": "Fresh apple juice",
+    "image": "https://via.placeholder.com/150"
+  }
+]

@@ -1,49 +1,42 @@
 import { createContext, useEffect, useState } from "react";
+import initialOrders from "../Data/orders.json";
+import initialCart from "../Data/cart.json";
+import { downloadJSON } from "../utils/downloadJSON";
+import { useUser } from "../Hooks/useUser";
 
 export const OrderContext = createContext();
 
 export default function OrderContextProvider({ children }) {
+  const { user } = useUser();
+
   const [cart, setCart] = useState(() => {
-    try {
-      const storedCart = localStorage.getItem("cart");
-      return storedCart && storedCart !== "undefined"
-        ? JSON.parse(storedCart)
-        : [];
-    } catch (err) {
-      console.error("Error parsing cart from localStorage:", err);
-      return [];
-    }
+    return user && initialCart[user.email] ? initialCart[user.email] : [];
   });
 
-  const [orders, setOrders] = useState(() => {
-    try {
-      const storedOrders = localStorage.getItem("orders");
-      return storedOrders && storedOrders !== "undefined"
-        ? JSON.parse(storedOrders)
-        : [];
-    } catch (err) {
-      console.error("Error parsing orders from localStorage:", err);
-      return [];
-    }
-  });
-
+  const [orders, setOrders] = useState(initialOrders || []);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    } catch (err) {
-      console.error("Error saving cart to localStorage:", err);
+    if (user && cart.length) {
+      const updatedCart = { ...initialCart, [user.email]: cart };
+      downloadJSON(updatedCart, "cart.json");
     }
-  }, [cart]);
+  }, [cart, user]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem("orders", JSON.stringify(orders));
-    } catch (err) {
-      console.error("Error saving orders to localStorage:", err);
+    if (orders.length) {
+      downloadJSON(orders, "orders.json");
     }
   }, [orders]);
+
+  // Update cart when user changes
+  useEffect(() => {
+    if (user) {
+      setCart(initialCart[user.email] || []);
+    } else {
+      setCart([]);
+    }
+  }, [user]);
 
   //   add product to cart
   const addToCart = (product, quantity = 1) => {
@@ -76,10 +69,6 @@ export default function OrderContextProvider({ children }) {
   const removeFromCart = (productId) => {
     setError(null);
     try {
-      //   setCart((prev) => {
-      //     prev.filter((item) => item.product.id !== productId);
-      //   });
-
       setCart((prev) => prev.filter((item) => item.product.id !== productId));
     } catch (err) {
       setError(err.message);
@@ -94,11 +83,6 @@ export default function OrderContextProvider({ children }) {
       if (quantity < 1) {
         throw new Error("Quantity cannot be less than 1");
       }
-      //   setCart((prev) => {
-      //     prev.map((item) =>
-      //       item.product.id === productId ? { ...item, quantity } : item
-      //     );
-      //   });
 
       setCart((prev) =>
         prev.map((item) =>
@@ -179,6 +163,40 @@ export default function OrderContextProvider({ children }) {
     return filteredOrders;
   };
 
+  // reset order data
+  const resetOrders = () => {
+    setError(null);
+    try {
+      setOrders([]);
+      downloadJSON([], "orders.json");
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  // Reset cart
+  const resetCart = () => {
+    setError(null);
+    try {
+      setCart([]);
+      if (user) {
+        downloadJSON({ ...initialCart, [user.email]: [] }, "cart.json");
+      }
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+  // Manual save
+  const saveData = () => {
+    downloadJSON(orders, "orders.json");
+    downloadJSON(
+      user ? { ...initialCart, [user.email]: cart } : initialCart,
+      "cart.json"
+    );
+  };
+
   return (
     <OrderContext.Provider
       value={{
@@ -191,6 +209,9 @@ export default function OrderContextProvider({ children }) {
         placeOrder,
         updateOrderStatus,
         filterOrders,
+        resetOrders,
+        resetCart,
+        saveData,
       }}
     >
       {children}
