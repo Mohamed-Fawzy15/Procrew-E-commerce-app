@@ -17,7 +17,9 @@ export default function ProductContextProvider({ children }) {
   // to get the products from the server
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/products");
+      const res = await axios.get(
+        "https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/products"
+      );
       setProducts(res.data);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
@@ -43,7 +45,7 @@ export default function ProductContextProvider({ children }) {
       };
 
       const res = await axios.post(
-        "http://localhost:3001/products",
+        "https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/products",
         newProduct
       );
       const savedProduct = res.data;
@@ -89,7 +91,9 @@ export default function ProductContextProvider({ children }) {
   const removeProduct = async (id) => {
     setError(null);
     try {
-      await axios.delete(`http://localhost:3001/products/${id}`);
+      await axios.delete(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/products/${id}`
+      );
       setProducts((prev) => prev.filter((product) => product.id !== id));
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
@@ -102,13 +106,17 @@ export default function ProductContextProvider({ children }) {
   const resetProducts = async () => {
     setError(null);
     try {
-      const res = await axios.get("http://localhost:3001/products");
+      const res = await axios.get(
+        "https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/products"
+      );
 
       const products = res.data;
 
       await Promise.all(
         products.map((p) =>
-          axios.delete(`http://localhost:3001/products/${p.id}`)
+          axios.delete(
+            `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/products/${p.id}`
+          )
         )
       );
       setProducts([]);

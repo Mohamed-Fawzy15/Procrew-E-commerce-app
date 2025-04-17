@@ -21,7 +21,7 @@ export default function OrderContextProvider({ children }) {
     try {
       if (user?.email) {
         const res = await axios.get(
-          `http://localhost:3001/cart?email=${user.email}`
+          `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart?email=${user.email}`
         );
         const cartData = res.data;
         setCart(cartData.length > 0 ? cartData[0].items : []);
@@ -38,7 +38,9 @@ export default function OrderContextProvider({ children }) {
   // Method to get the orders data
   const getOrdersData = async () => {
     try {
-      const res = await axios.get(`http://localhost:3001/orders`);
+      const res = await axios.get(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/orders`
+      );
       setOrders(res.data);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
@@ -67,7 +69,7 @@ export default function OrderContextProvider({ children }) {
 
       // it contain the users cart
       const cartRes = await axios.get(
-        `http://localhost:3001/cart?email=${user.email}`
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart?email=${user.email}`
       );
       console.log(cartRes);
 
@@ -76,12 +78,15 @@ export default function OrderContextProvider({ children }) {
       // the problem for the refresh and navigate to the login page
       if (cartRes.data.length) {
         await axios.patch(
-          `http://localhost:3001/cart/${cartRes.data[0].id}`,
+          `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart/${cartRes.data[0].id}`,
           cartPayload
         );
         console.log("hello");
       } else {
-        await axios.post(`http://localhost:3001/cart`, cartPayload);
+        await axios.post(
+          `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart`,
+          cartPayload
+        );
       }
 
       setCart(updatedCart);
@@ -101,14 +106,17 @@ export default function OrderContextProvider({ children }) {
 
       if (user) {
         const cartRes = await axios.get(
-          `http://localhost:3001/cart?email=${user.email}`
+          `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart?email=${user.email}`
         );
         const cartData = cartRes.data;
 
         if (cartData.length) {
-          await axios.patch(`http://localhost:3001/cart/${cartData[0].id}`, {
-            items: updatedCart,
-          });
+          await axios.patch(
+            `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart/${cartData[0].id}`,
+            {
+              items: updatedCart,
+            }
+          );
         }
       }
 
@@ -134,20 +142,26 @@ export default function OrderContextProvider({ children }) {
 
       if (user?.email) {
         const cartRes = await axios.get(
-          `http://localhost:3001/cart?email=${user.email}`
+          `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart?email=${user.email}`
         );
 
         const cartData = cartRes.data;
 
         if (cartData.length) {
-          await axios.patch(`http://localhost:3001/cart/${cartData[0].id}`, {
-            items: updatedCart,
-          });
+          await axios.patch(
+            `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart/${cartData[0].id}`,
+            {
+              items: updatedCart,
+            }
+          );
         } else {
-          await axios.post(`http://localhost:3001/cart`, {
-            userId: user.email,
-            items: updatedCart,
-          });
+          await axios.post(
+            `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart`,
+            {
+              userId: user.email,
+              items: updatedCart,
+            }
+          );
         }
       }
 
@@ -181,22 +195,28 @@ export default function OrderContextProvider({ children }) {
         createdAt: new Date().toISOString(),
       };
 
-      const orderRes = await axios.post(`http://localhost:3001/orders`, order);
+      const orderRes = await axios.post(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/orders`,
+        order
+      );
       const savedOrder = orderRes.data;
       setOrders((prev) => [...prev, savedOrder]);
 
       // Clear cart
       if (user?.email) {
         const cartRes = await axios.get(
-          `http://localhost:3001/cart?email=${user.email}`
+          `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart?email=${user.email}`
         );
 
         const cartData = cartRes.data;
 
         if (cartData.length) {
-          await axios.patch(`http://localhost:3001/cart/${cartData[0].id}`, {
-            items: [],
-          });
+          await axios.patch(
+            `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/cart/${cartData[0].id}`,
+            {
+              items: [],
+            }
+          );
         }
       }
       setCart([]);
@@ -212,9 +232,12 @@ export default function OrderContextProvider({ children }) {
   const updateOrderStatus = async (orderId, status) => {
     setError(null);
     try {
-      const res = await axios.patch(`http://localhost:3001/orders/${orderId}`, {
-        status,
-      });
+      const res = await axios.patch(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/orders/${orderId}`,
+        {
+          status,
+        }
+      );
       const updatedOrder = res.data;
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? updatedOrder : o))
@@ -252,11 +275,17 @@ export default function OrderContextProvider({ children }) {
   const resetOrders = async () => {
     setError(null);
     try {
-      const res = await axios.get(`http://localhost:3001/orders`);
+      const res = await axios.get(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/orders`
+      );
       const orders = res.data;
 
       await Promise.all(
-        orders.map((o) => axios.delete(`http://localhost:3001/orders/${o.id}`))
+        orders.map((o) =>
+          axios.delete(
+            `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/orders/${o.id}`
+          )
+        )
       );
 
       setOrders([]);

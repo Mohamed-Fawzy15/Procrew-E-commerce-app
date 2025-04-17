@@ -61,10 +61,13 @@ export default function UserContextProvider({ children }) {
         throw new Error("Email and password are required");
       }
 
-      const response = await axios.get(`http://localhost:3001/users`, {
-        params: { email: values.email },
-        timeout: 5000,
-      });
+      const response = await axios.get(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/users`,
+        {
+          params: { email: values.email },
+          timeout: 5000,
+        }
+      );
 
       const users = response.data;
       if (!users.length) {
@@ -115,10 +118,13 @@ export default function UserContextProvider({ children }) {
         throw new Error("Passwords do not match");
       }
 
-      const checkRegistered = await axios.get(`http://localhost:3001/users`, {
-        params: { email: values.email },
-        timeout: 5000,
-      });
+      const checkRegistered = await axios.get(
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/users`,
+        {
+          params: { email: values.email },
+          timeout: 5000,
+        }
+      );
 
       if (checkRegistered.data.length) {
         throw new Error("Email already registered");
@@ -134,7 +140,7 @@ export default function UserContextProvider({ children }) {
       };
 
       const response = await axios.post(
-        `http://localhost:3001/users`,
+        `https://my-json-server.typicode.com/Mohamed-Fawzy15/Mohamed-Fawzy15-Procrew-db/users`,
         newUser,
         {
           timeout: 5000,
