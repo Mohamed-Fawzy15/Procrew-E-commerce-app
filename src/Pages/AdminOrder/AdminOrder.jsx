@@ -82,7 +82,7 @@ export default function AdminOrder() {
             id="userId"
             name="userId"
             type="text"
-            className="input-style"
+            className="input-style w-full"
             value={filters.userId}
             onChange={handleFilterChange}
             placeholder={t("admin_orders.user_email")}
@@ -96,7 +96,7 @@ export default function AdminOrder() {
             id="date"
             name="date"
             type="date"
-            className="input-style"
+            className="input-style w-full"
             value={filters.date}
             onChange={handleFilterChange}
           />
