@@ -17,8 +17,9 @@ import i18n from "./i18n";
 import { Toaster } from "react-hot-toast";
 import AdminDashboard from "./Component/AdminDashboard/AdminDashboard";
 import AdminLayout from "./Pages/AdminLayout/AdminLayout";
-import NotFound from "./Pages/NotFound/Notfound";
 import ProductDetails from "./Pages/ProductDetails/ProductDetails";
+// fix importing error
+import NotFound from "./Pages/NotFound/NotFound";
 
 function App() {
   const router = createBrowserRouter([
