@@ -153,6 +153,10 @@ const enTranslations = {
   copy_right: {
     copy_right: "Copyright © 2025 All rights reserved",
   },
+  notFound: {
+    message: "Page Not Found",
+    backToHome: "Return to Home",
+  },
 };
 
 // Arabic translations
@@ -305,6 +309,10 @@ const arTranslations = {
   },
   copy_right: {
     copy_right: "حقوق النسخ © 2025 كل الحقوق محفوظة",
+  },
+  notFound: {
+    message: "الصفحة غير موجودة",
+    backToHome: "العودة للرئيسية",
   },
 };
 
