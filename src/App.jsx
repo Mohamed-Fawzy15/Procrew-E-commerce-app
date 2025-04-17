@@ -17,7 +17,7 @@ import i18n from "./i18n";
 import { Toaster } from "react-hot-toast";
 import AdminDashboard from "./Component/AdminDashboard/AdminDashboard";
 import AdminLayout from "./Pages/AdminLayout/AdminLayout";
-import NotFound from "./Pages/notFound/notfound";
+import NotFound from "./Pages/NotFound/Notfound";
 import ProductDetails from "./Pages/ProductDetails/ProductDetails";
 
 function App() {
