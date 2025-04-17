@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useProducts } from "../../Hooks/useProducts";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 
 export default function AdminProducts() {
   const {
     products,
     addProducts,
     updateProduct,
-    deleteProduct,
+    removeProduct,
     resetProducts,
     saveData,
   } = useProducts();
@@ -79,13 +80,19 @@ export default function AdminProducts() {
   };
 
   const handleDeleteProduct = (id) => {
-    if (window.confirm(t("dashboard.delete_product_confirm"))) {
-      try {
-        deleteProduct(id);
-      } catch (err) {
-        alert(err.message);
+    Swal.fire({
+      icon: "error",
+      title: "Are you sure?",
+      text: "This action will delete the product permanently.",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          removeProduct(id);
+        } catch (err) {
+          alert(err.message);
+        }
       }
-    }
+    });
   };
 
   const handleResetData = () => {
@@ -261,23 +268,23 @@ export default function AdminProducts() {
           {products.length ? (
             <table className="min-w-full bg-white border border-gray-200">
               <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr className="">
+                  <th className="px-6 py-3 text-left rtl:text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("dashboard.product.image")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left  rtl:text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("dashboard.product.name")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left  rtl:text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("dashboard.product.price")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left  rtl:text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("products.category")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left  rtl:text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("dashboard.product.status")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left  rtl:text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("dashboard.product.actions")}
                   </th>
                 </tr>

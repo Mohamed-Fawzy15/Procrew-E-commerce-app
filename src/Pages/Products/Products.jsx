@@ -5,11 +5,15 @@ import { Link } from "react-router-dom";
 import { useOrders } from "../../Hooks/useOrders";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+import { useUser } from "../../Hooks/useUser";
 
 export default function Products() {
+  const { user } = useUser();
   const { searchProducts } = useProducts();
-  const [searchQuery, setSearchQuery] = useState("");
   const { addToCart } = useOrders();
+  // const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [filters, setFilters] = useState({
     category: "",
     priceMin: "",
@@ -28,12 +32,12 @@ export default function Products() {
   const filteredProducts = searchProducts(searchQuery, processedFilters);
 
   const categories = [
-    { id: "frozen", name: "Frozen" },
-    { id: "canned", name: "Canned Items" },
-    { id: "juices", name: "Juices" },
-    { id: "spices", name: "Spices" },
-    { id: "pickles", name: "Pickles" },
-    { id: "snacks", name: "Snacks" },
+    { id: "frozen", name: t("products.frozen") },
+    { id: "canned", name: t("products.canned") },
+    { id: "juices", name: t("products.juices") },
+    { id: "spices", name: t("products.spices") },
+    { id: "pickles", name: t("products.pickles") },
+    { id: "snacks", name: t("products.snacks") },
   ];
 
   const handleFilterChange = (e) => {
@@ -44,20 +48,20 @@ export default function Products() {
     }));
   };
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => {
     try {
-      addToCart(product);
-      toast.success(t("products.product_added_to_cart"), {
-        style: {
-          fontWeight: 600,
-        },
-      });
-    } catch {
-      toast.error(t("products.product_not_found"), {
-        style: {
-          fontWeight: 600,
-        },
-      });
+      if (user) {
+        const success = await addToCart(product);
+        console.log(success);
+        if (success) {
+          toast.success(t("products.product_added_to_cart"), {
+            style: { fontWeight: 600 },
+          });
+        }
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message;
+      throw new Error(errorMessage);
     }
   };
 
@@ -149,43 +153,52 @@ export default function Products() {
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition "
+              className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition"
             >
-              {product.image && (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-50 object-cover rounded mb-2"
-                />
-              )}
-              <h2 className="text-xl font-semibold">{product.name}</h2>
-              <p className="text-gray-600">{product.description}</p>
-              <p className="text-gray-800 font-bold">
-                ${Number(product.price).toFixed(2)}
-              </p>
-              <p
-                className={
-                  product.isAvailable ? "text-green-500" : "text-red-500"
-                }
+              <Link
+                to={`/productdetails/${product.id}`}
+                className="block"
+                onClick={() => console.log(product.id)}
               >
-                {product.isAvailable
-                  ? t("products.in_stock")
-                  : t("products.out_of_stock")}
-              </p>
-              <p className="text-gray-500">
-                {t("products.category")}: {product.category}
-              </p>
+                {product.image && (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-50 object-cover rounded mb-2"
+                  />
+                )}
+                <h2 className="text-xl font-semibold hover:text-blue-600">
+                  {product.name}
+                </h2>
+                <p className="text-gray-600 line-clamp-2">
+                  {product.description}
+                </p>
+                <p className="text-gray-800 font-bold">
+                  ${Number(product.price).toFixed(2)}
+                </p>
+                <p
+                  className={
+                    product.isAvailable ? "text-green-500" : "text-red-500"
+                  }
+                >
+                  {product.isAvailable
+                    ? t("products.in_stock")
+                    : t("products.out_of_stock")}
+                </p>
+                <p className="text-gray-500">
+                  {t("products.category")}: {product.category}
+                </p>
+              </Link>
               {product.isAvailable ? (
                 <button
                   onClick={() => handleAddToCart(product)}
-                  className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm hover:bg-blue-800 cursor-pointer "
+                  className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm hover:bg-blue-800 cursor-pointer w-full"
                 >
                   {t("products.add_to_cart")}
                 </button>
               ) : (
                 <button
-                  onClick={() => handleAddToCart(product)}
-                  className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm  disabled:bg-blue-200 "
+                  className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-sm disabled:bg-blue-200 w-full"
                   disabled
                 >
                   {t("products.add_to_cart")}

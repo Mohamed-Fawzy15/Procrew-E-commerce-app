@@ -1,24 +1,32 @@
 // i was using localStorage here but the product data should not be in the localStorage
 
+import axios from "axios";
 import { createContext, useEffect, useState } from "react";
-import initialProducts from "../data/products.json";
-import { downloadJSON } from "../utils/downloadJSON";
 
 export const ProductContext = createContext();
 
 export default function ProductContextProvider({ children }) {
-  const [products, setProducts] = useState(initialProducts || []);
+  const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
 
-  // Download products.json when products change
+  // Load products on mount
   useEffect(() => {
-    if (products.length) {
-      downloadJSON(products, "products.json");
+    fetchProducts();
+  }, []);
+
+  // to get the products from the server
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("http://localhost:3001/products");
+      setProducts(res.data);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
     }
-  }, [products]);
+  };
 
   //   handle add products
-  const addProducts = (values) => {
+  const addProducts = async (values) => {
     setError(null);
     try {
       if (!values.name || !values.category || !values.price) {
@@ -26,74 +34,88 @@ export default function ProductContextProvider({ children }) {
       }
 
       const newProduct = {
-        id: Date.now(),
         name: values.name,
         category: values.category,
         price: Number(values.price),
         isAvailable: values.isAvailable !== false,
         description: values.description || "",
-        image: values.image || "https://via.placeholder.com/150",
+        image: values.image || "https://placehold.co/600x400",
       };
 
-      setProducts((prev) => [...prev, newProduct]); // to get the old the products and the new ones
-      return newProduct;
+      const res = await axios.post(
+        "http://localhost:3001/products",
+        newProduct
+      );
+      const savedProduct = res.data;
+      setProducts((prev) => [...prev, savedProduct]);
+      return savedProduct;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   //   update specific product
-  const updateProduct = (id, values) => {
+  const updateProduct = async (id, values) => {
     setError(null);
     try {
       if (!values.name || !values.category || !values.price) {
         throw new Error("Name, category, and price are required");
       }
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === id
-            ? {
-                ...product,
-                name: values.name,
-                category: values.category,
-                price: Number(values.price),
-                isAvailable: values.isAvailable !== false,
-                description: values.description || "",
-                image:
-                  values.image ||
-                  product.image ||
-                  "https://via.placeholder.com/150",
-              }
-            : product
-        )
+      const updatedProduct = {
+        name: values.name,
+        category: values.category,
+        price: Number(values.price),
+        isAvailable: values.isAvailable !== false,
+        description: values.description || "",
+        image: values.image || "https://placehold.co/600x400",
+      };
+
+      const res = await axios.patch(
+        `http://localhost:3001/products/${id}`,
+        updatedProduct
       );
+      const savedProduct = res.data;
+      setProducts((prev) => prev.map((p) => (p.id === id ? savedProduct : p)));
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   //   remove specific product
-  const removeProduct = (id) => {
+  const removeProduct = async (id) => {
     setError(null);
     try {
+      await axios.delete(`http://localhost:3001/products/${id}`);
       setProducts((prev) => prev.filter((product) => product.id !== id));
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   // Reset all products
-  const resetProducts = () => {
+  const resetProducts = async () => {
     setError(null);
     try {
+      const res = await axios.get("http://localhost:3001/products");
+
+      const products = res.data;
+
+      await Promise.all(
+        products.map((p) =>
+          axios.delete(`http://localhost:3001/products/${p.id}`)
+        )
+      );
       setProducts([]);
-      downloadJSON([], "products.json");
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -138,9 +160,13 @@ export default function ProductContextProvider({ children }) {
     return filteredProducts;
   };
 
-  // Manual save
-  const saveData = () => {
-    downloadJSON(products, "products.json");
+  const getProductById = (id) => {
+    const product = products.find((p) => p.id === id || p.id.toString() === id);
+    if (!product) {
+      console.warn("Product not found:", id);
+      return null;
+    }
+    return product;
   };
 
   return (
@@ -153,7 +179,7 @@ export default function ProductContextProvider({ children }) {
         removeProduct,
         searchProducts,
         resetProducts,
-        saveData,
+        getProductById,
       }}
     >
       {children}

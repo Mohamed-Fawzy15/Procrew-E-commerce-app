@@ -18,6 +18,7 @@ import { Toaster } from "react-hot-toast";
 import AdminDashboard from "./Component/AdminDashboard/AdminDashboard";
 import AdminLayout from "./Pages/AdminLayout/AdminLayout";
 import NotFound from "./Pages/notFound/notfound";
+import ProductDetails from "./Pages/ProductDetails/ProductDetails";
 
 function App() {
   const router = createBrowserRouter([
@@ -30,6 +31,22 @@ function App() {
           element: (
             <ProtectedRoute>
               <Products />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "products",
+          element: (
+            <ProtectedRoute>
+              <Products />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "productdetails/:productId",
+          element: (
+            <ProtectedRoute>
+              <ProductDetails />
             </ProtectedRoute>
           ),
         },

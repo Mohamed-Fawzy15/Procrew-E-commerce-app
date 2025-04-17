@@ -1,110 +1,176 @@
 import { createContext, useEffect, useState } from "react";
-import initialOrders from "../Data/orders.json";
-import initialCart from "../Data/cart.json";
-import { downloadJSON } from "../utils/downloadJSON";
 import { useUser } from "../Hooks/useUser";
+import axios from "axios";
 
 export const OrderContext = createContext();
 
 export default function OrderContextProvider({ children }) {
   const { user } = useUser();
-
-  const [cart, setCart] = useState(() => {
-    return user && initialCart[user.email] ? initialCart[user.email] : [];
-  });
-
-  const [orders, setOrders] = useState(initialOrders || []);
+  const [cart, setCart] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
 
+  // Load cart and orders when user changes
   useEffect(() => {
-    if (user && cart.length) {
-      const updatedCart = { ...initialCart, [user.email]: cart };
-      downloadJSON(updatedCart, "cart.json");
-    }
-  }, [cart, user]);
-
-  useEffect(() => {
-    if (orders.length) {
-      downloadJSON(orders, "orders.json");
-    }
-  }, [orders]);
-
-  // Update cart when user changes
-  useEffect(() => {
-    if (user) {
-      setCart(initialCart[user.email] || []);
-    } else {
-      setCart([]);
-    }
+    getCartData();
+    getOrdersData();
   }, [user]);
 
-  //   add product to cart
-  const addToCart = (product, quantity = 1) => {
+  // Method to get the cart data
+  const getCartData = async () => {
+    try {
+      if (user?.email) {
+        const res = await axios.get(
+          `http://localhost:3001/cart?email=${user.email}`
+        );
+        const cartData = res.data;
+        setCart(cartData.length > 0 ? cartData[0].items : []);
+      } else {
+        setCart([]);
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  // Method to get the orders data
+  const getOrdersData = async () => {
+    try {
+      const res = await axios.get(`http://localhost:3001/orders`);
+      setOrders(res.data);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  // Add product to cart
+  const addToCart = async (product, quantity = 1) => {
     setError(null);
     try {
-      if (!product.isAvailable) {
-        throw new Error("Product is out of stock");
+      // Check if user is logged in
+      if (!user) {
+        throw new Error("Please login to add items to cart");
       }
 
-      setCart((prev) => {
-        const productExisting = prev.find(
-          (item) => item.product.id === product.id
+      // Update cart state
+      const updatedCart = [...cart];
+      const item = updatedCart.find((i) => i.product.id === product.id);
+      if (item) {
+        item.quantity += quantity;
+      } else {
+        updatedCart.push({ product, quantity });
+      }
+
+      // it contain the users cart
+      const cartRes = await axios.get(
+        `http://localhost:3001/cart?email=${user.email}`
+      );
+      console.log(cartRes);
+
+      const cartPayload = { userId: user.email, items: updatedCart };
+
+      // the problem for the refresh and navigate to the login page
+      if (cartRes.data.length) {
+        await axios.patch(
+          `http://localhost:3001/cart/${cartRes.data[0].id}`,
+          cartPayload
         );
-        if (productExisting) {
-          return prev.map((item) =>
-            item.product.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          );
-        }
-        return [...prev, { product, quantity }];
-      });
+        console.log("hello");
+      } else {
+        await axios.post(`http://localhost:3001/cart`, cartPayload);
+      }
+
+      setCart(updatedCart);
+      return true;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   remove product from the cart
-  const removeFromCart = (productId) => {
+  // Remove product from the cart
+  const removeFromCart = async (productId) => {
     setError(null);
     try {
-      setCart((prev) => prev.filter((item) => item.product.id !== productId));
+      const updatedCart = cart.filter((item) => item.product.id !== productId);
+
+      if (user) {
+        const cartRes = await axios.get(
+          `http://localhost:3001/cart?email=${user.email}`
+        );
+        const cartData = cartRes.data;
+
+        if (cartData.length) {
+          await axios.patch(`http://localhost:3001/cart/${cartData[0].id}`, {
+            items: updatedCart,
+          });
+        }
+      }
+
+      setCart(updatedCart);
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   update product quantity on cart
-  const updateCartQuantity = (productId, quantity) => {
+  // Update product quantity in cart
+  const updateCartQuantity = async (productId, quantity) => {
     setError(null);
     try {
       if (quantity < 1) {
         throw new Error("Quantity cannot be less than 1");
       }
 
-      setCart((prev) =>
-        prev.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
-        )
+      const updatedCart = cart.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
       );
+
+      if (user?.email) {
+        const cartRes = await axios.get(
+          `http://localhost:3001/cart?email=${user.email}`
+        );
+
+        const cartData = cartRes.data;
+
+        if (cartData.length) {
+          await axios.patch(`http://localhost:3001/cart/${cartData[0].id}`, {
+            items: updatedCart,
+          });
+        } else {
+          await axios.post(`http://localhost:3001/cart`, {
+            userId: user.email,
+            items: updatedCart,
+          });
+        }
+      }
+
+      setCart(updatedCart);
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   place order
-  const placeOrder = (user) => {
+  // Place order
+  const placeOrder = async () => {
     setError(null);
     try {
+      if (!user?.email) {
+        throw new Error("Please login to place an order");
+      }
       if (!cart.length) {
         throw new Error("Cart is empty");
       }
 
       const order = {
-        id: Date.now(),
         userId: user.email,
         items: [...cart],
         total: cart.reduce(
@@ -115,31 +181,52 @@ export default function OrderContextProvider({ children }) {
         createdAt: new Date().toISOString(),
       };
 
-      setOrders((prev) => [...prev, order]);
+      const orderRes = await axios.post(`http://localhost:3001/orders`, order);
+      const savedOrder = orderRes.data;
+      setOrders((prev) => [...prev, savedOrder]);
+
+      // Clear cart
+      if (user?.email) {
+        const cartRes = await axios.get(
+          `http://localhost:3001/cart?email=${user.email}`
+        );
+
+        const cartData = cartRes.data;
+
+        if (cartData.length) {
+          await axios.patch(`http://localhost:3001/cart/${cartData[0].id}`, {
+            items: [],
+          });
+        }
+      }
       setCart([]);
-      return order;
+      return savedOrder;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   update order status for admin
-  const updateOrderStatus = (orderId, status) => {
+  // Update order status for admin
+  const updateOrderStatus = async (orderId, status) => {
     setError(null);
     try {
+      const res = await axios.patch(`http://localhost:3001/orders/${orderId}`, {
+        status,
+      });
+      const updatedOrder = res.data;
       setOrders((prev) =>
-        prev.map((order) =>
-          order.id === orderId ? { ...order, status } : order
-        )
+        prev.map((o) => (o.id === orderId ? updatedOrder : o))
       );
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   filter orders for admin
+  // Filter orders for admin
   const filterOrders = (filter = {}) => {
     let filteredOrders = [...orders];
     if (filter.status) {
@@ -148,12 +235,10 @@ export default function OrderContextProvider({ children }) {
       );
     }
     if (filter.userId) {
-      filteredOrders = filteredOrders.filter(
-        (order) =>
-          order.userId.toLowerCase().includes(filter.userId.toLowerCase()) // we make it lower case becuase the userId is the email
+      filteredOrders = filteredOrders.filter((order) =>
+        order.userId.toLowerCase().includes(filter.userId.toLowerCase())
       );
     }
-
     if (filter.date) {
       const targetDate = new Date(filter.date).toISOString().split("T")[0];
       filteredOrders = filteredOrders.filter(
@@ -163,38 +248,23 @@ export default function OrderContextProvider({ children }) {
     return filteredOrders;
   };
 
-  // reset order data
-  const resetOrders = () => {
+  // Reset orders
+  const resetOrders = async () => {
     setError(null);
     try {
-      setOrders([]);
-      downloadJSON([], "orders.json");
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
+      const res = await axios.get(`http://localhost:3001/orders`);
+      const orders = res.data;
 
-  // Reset cart
-  const resetCart = () => {
-    setError(null);
-    try {
-      setCart([]);
-      if (user) {
-        downloadJSON({ ...initialCart, [user.email]: [] }, "cart.json");
-      }
+      await Promise.all(
+        orders.map((o) => axios.delete(`http://localhost:3001/orders/${o.id}`))
+      );
+
+      setOrders([]);
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
-  };
-  // Manual save
-  const saveData = () => {
-    downloadJSON(orders, "orders.json");
-    downloadJSON(
-      user ? { ...initialCart, [user.email]: cart } : initialCart,
-      "cart.json"
-    );
   };
 
   return (
@@ -210,8 +280,6 @@ export default function OrderContextProvider({ children }) {
         updateOrderStatus,
         filterOrders,
         resetOrders,
-        resetCart,
-        saveData,
       }}
     >
       {children}

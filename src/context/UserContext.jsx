@@ -1,60 +1,83 @@
 import { createContext, useEffect, useState } from "react";
-import initialUsers from "../Data/users.json";
-import { downloadJSON } from "../utils/downloadJSON";
+import axios from "axios";
 
 export const UserContext = createContext();
 
 export default function UserContextProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
-  const [users, setUsers] = useState(initialUsers || []); // this got the users from the json file
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [error, setError] = useState(null);
 
-  //   this step to check if the the user and the token is sync with the localStorage
+  // Load user from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
+    if (storedUser && storedToken) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser?.email) {
+          setUser(parsedUser);
+          setToken(storedToken);
+        } else {
+          console.warn("Invalid user data in localStorage, clearing");
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+        }
+      } catch (err) {
+        console.error("Failed to parse localStorage user:", err);
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
+    }
+  }, []);
+
+  // Sync user and token with localStorage
   useEffect(() => {
     if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
+      try {
+        localStorage.setItem("user", JSON.stringify(user));
+      } catch (err) {
+        console.error("Failed to save user to localStorage:", err);
+      }
     } else {
       localStorage.removeItem("user");
     }
-
     if (token) {
-      localStorage.setItem("token", token);
+      try {
+        localStorage.setItem("token", token);
+      } catch (err) {
+        console.error("Failed to save token to localStorage:", err);
+      }
     } else {
       localStorage.removeItem("token");
     }
   }, [user, token]);
 
-  // Download users.json when users change
-  useEffect(() => {
-    if (users.length) {
-      downloadJSON(users, "users.json");
-    }
-  }, [users]);
-
-  //   handle the login like api
-  const login = (values) => {
+  // Handle login
+  const login = async (values) => {
     setError(null);
     try {
       if (!values.email || !values.password) {
         throw new Error("Email and password are required");
       }
 
-      const existingUser = users.find((u) => u.email === values.email);
+      const response = await axios.get(`http://localhost:3001/users`, {
+        params: { email: values.email },
+        timeout: 5000,
+      });
 
-      if (!existingUser) {
+      const users = response.data;
+      if (!users.length) {
         throw new Error("User not found. Please sign up.");
       }
 
+      const existingUser = users[0];
       if (existingUser.password !== values.password) {
         throw new Error("Incorrect password");
       }
 
       const userData = {
+        id: existingUser.id,
         email: existingUser.email,
         name: existingUser.name,
         phone: existingUser.phone,
@@ -63,16 +86,19 @@ export default function UserContextProvider({ children }) {
 
       setUser(userData);
       setToken(`token_${Date.now()}`);
-
       return userData;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage =
+        err.code === "ECONNREFUSED"
+          ? "Server is not responding. Please ensure the backend is running."
+          : err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   handle the register like api
-  const signup = (values) => {
+  // Handle register
+  const signup = async (values) => {
     setError(null);
     try {
       if (
@@ -82,10 +108,19 @@ export default function UserContextProvider({ children }) {
         !values.confirmPassword ||
         !values.phone
       ) {
-        throw new Error("all fields are required");
+        throw new Error("All fields are required");
       }
 
-      if (users.some((u) => u.email === values.email)) {
+      if (values.password !== values.confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+
+      const checkRegistered = await axios.get(`http://localhost:3001/users`, {
+        params: { email: values.email },
+        timeout: 5000,
+      });
+
+      if (checkRegistered.data.length) {
         throw new Error("Email already registered");
       }
 
@@ -98,41 +133,45 @@ export default function UserContextProvider({ children }) {
         role: values.email === "admin@example.com" ? "admin" : "user",
       };
 
-      setUsers((prev) => [...prev, newUser]);
+      const response = await axios.post(
+        `http://localhost:3001/users`,
+        newUser,
+        {
+          timeout: 5000,
+        }
+      );
 
+      const savedUser = response.data;
       const userData = {
-        email: values.email,
-        name: values.name,
-        phone: values.phone,
-        role: newUser.role,
+        id: savedUser.id,
+        email: savedUser.email,
+        name: savedUser.name,
+        phone: savedUser.phone,
+        role: savedUser.role,
       };
 
       setUser(userData);
       setToken(`token_${Date.now()}`);
-
       return userData;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMessage =
+        err.code === "ECONNREFUSED"
+          ? "Server is not responding. Please ensure the backend is running."
+          : err.response?.data?.message || err.message;
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  //   handle logout
+  // Handle logout
   const logout = () => {
     setError(null);
     setUser(null);
     setToken(null);
   };
 
-  // Manual save for testing
-  const saveData = () => {
-    downloadJSON(users, "users.json");
-  };
-
   return (
-    <UserContext.Provider
-      value={{ user, token, users, error, login, signup, logout, saveData }}
-    >
+    <UserContext.Provider value={{ user, token, error, login, signup, logout }}>
       {children}
     </UserContext.Provider>
   );
