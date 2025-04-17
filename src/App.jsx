@@ -19,7 +19,7 @@ import AdminDashboard from "./Component/AdminDashboard/AdminDashboard";
 import AdminLayout from "./Pages/AdminLayout/AdminLayout";
 import ProductDetails from "./Pages/ProductDetails/ProductDetails";
 // fix importing error
-import NotFound from "./Pages/NotFound/NotFound";
+import NotFound from "./Pages/notFound/NotFound";
 
 function App() {
   const router = createBrowserRouter([
